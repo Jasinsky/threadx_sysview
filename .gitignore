@@ -1,0 +1,22 @@
+# Build trees
+/build/
+/build-*/
+
+# SystemView installer and exports / captures (local artifacts)
+*.deb
+/export
+/*.csv
+*.SVDat
+capture*.bin
+
+# QEMU post-mortem outputs (written into the build dir, ignored there anyway)
+native_trace.trx
+native.json
+txsv_stats.bin
+sysview_ring.bin
+sysview_wroff.bin
+
+# Python / Renode
+__pycache__/
+*.pyc
+*.log

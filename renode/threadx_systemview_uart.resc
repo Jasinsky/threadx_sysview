@@ -1,0 +1,32 @@
+:name: ThreadX + SystemView over UART
+:description: Build with -DTXSV_COMM=uart. Runs the txsv demo on UART socket :19112; run tools/sv_renode_bridge.py and point SystemView IP Recorder at 127.0.0.1:19111.
+
+$elf?=@build-renode/demo
+$port?=19112
+
+mach create "threadx-sv"
+machine LoadPlatformDescription @renode/threadx_m4.repl
+
+# UART0 <-> raw TCP server. 'false' = no telnet negotiation bytes, which
+# would otherwise corrupt the SystemView handshake. 'true' = flushOnConnect:
+# drop bytes the previous client never read, so each new SystemView session
+# sees the target's hello first instead of the old session's backlog.
+emulation CreateServerSocketTerminal $port "sysview" false true
+connector Connect sysbus.uart0 sysview
+
+# Linux/macOS alternative for SystemView's UART Recorder:
+# emulation CreateUartPtyTerminal "sysview_pty" "/tmp/sysview-uart" true
+# connector Connect sysbus.uart0 sysview_pty
+
+macro reset
+"""
+    sysbus LoadELF $elf
+    # Enable the UART before the CPU runs: SystemView may connect (and send
+    # its hello) the moment the socket exists, and the PL011 model drops RX
+    # bytes while UARTEN=0. LCR_H = 8N1 + FIFO, CR = UARTEN|TXE|RXE.
+    sysbus WriteDoubleWord 0x4000402C 0x70
+    sysbus WriteDoubleWord 0x40004030 0x301
+"""
+runMacro $reset
+
+start

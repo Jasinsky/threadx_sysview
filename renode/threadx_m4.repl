@@ -1,0 +1,24 @@
+// Generic Cortex-M4 matching the memory map of upstream ThreadX's
+// ports/cortex_m4/gnu/example_build (sample_threadx.ld, 6 MHz SysTick).
+flash: Memory.MappedMemory @ sysbus 0x00000000
+    size: 0x00400000
+
+sram: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x00800000
+
+nvic: IRQControllers.NVIC @ sysbus 0xE000E000
+    priorityMask: 0xF0
+    systickFrequency: 6000000
+    IRQ -> cpu@0
+
+cpu: CPU.CortexM @ sysbus
+    cpuType: "cortex-m4"
+    nvic: nvic
+
+// Cycle counter used as the SystemView / ThreadX trace timestamp
+dwt: Miscellaneous.DWT @ sysbus 0xE0001000
+    frequency: 6000000
+
+// SystemView transport
+uart0: UART.PL011 @ sysbus 0x40004000
+    -> nvic@5

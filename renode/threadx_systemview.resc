@@ -1,0 +1,21 @@
+:name: ThreadX + SystemView over emulated J-Link RTT
+:description: Runs the txsv demo; renode/sv_rtt_probe.py reads SystemView's RTT buffer like a J-Link and serves SystemView's IP Recorder on 127.0.0.1:19111.
+
+$elf?=@build-renode/demo
+$port?=19111
+
+mach create "threadx-sv"
+machine LoadPlatformDescription @renode/threadx_m4.repl
+
+macro reset
+"""
+    sysbus LoadELF $elf
+"""
+runMacro $reset
+
+# Probe stand-in: reads/writes _SEGGER_RTT over the system bus from a host
+# thread, like J-Link over SWD. Firmware needs no transport code.
+include @renode/sv_rtt_probe.py
+sv_rtt_probe $port
+
+start
